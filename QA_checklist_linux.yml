@@ -1,0 +1,9 @@
+---
+ - hosts: all
+   name: To Run commands on Linux servers
+   gather_facts: yes
+   become: root
+   tasks:
+     - name: QA checklist linux
+       include_role:
+        name: QA_checklist_linux_rmg
