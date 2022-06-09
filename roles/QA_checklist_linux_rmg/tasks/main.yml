@@ -1,0 +1,147 @@
+---
+- name: This command will display the hostname of the server
+  shell: hostname
+  register: server_name
+- set_fact: 
+    Qa_server: "{{ server_name.stdout | replace('\n', '')}}"
+
+- name: This command will display the OS
+  shell: cat /etc/redhat-release
+  register: os_name
+- set_fact: 
+    Qa_os: "{{ os_name.stdout | replace('\n', '')}}"
+
+- name: This command will display the kernal version
+  shell: uname -r 
+  register: kernal_version
+- set_fact: 
+    Qa_kernal_version: "{{ kernal_version.stdout | replace('\n', '')}}"
+
+- name: This command will display the Systems last patched date of installed packages
+  shell: rpm -qa --last |less | awk '{print $1}' 
+  register: patched_date
+- set_fact: 
+    Qa_patched_date: "{{ patched_date.stdout | replace('\n', '  ')}}"
+
+
+- name: This command will display the Local Admin account 
+  shell: cat /etc/passwd | egrep -i "bash" | egrep -v "root|nagios" | cut -d':' -f 1,6,7
+  register: local_accounts
+- set_fact: 
+    Qa_local_accounts: "{{ local_accounts.stdout | replace('\n', '  ') }}"
+
+- name: This command will display the Local Admin pass max days
+  shell: cat /etc/login.defs | head -n 2 #  head -n 1 cat /etc/login.defs | head -n 1 
+  register: local_accounts_pass_max_days
+- set_fact: 
+    Qa_local_max_days: "{{ local_accounts_pass_max_days.stdout | replace('\n', '') }}"
+
+- name: This command will display the Local groups
+  shell: cat /etc/group |less and cat /etc/passwd |less 
+  register: local_groups
+- set_fact: 
+    Qa_local_groups: "{{ local_groups.stdout | replace('\n', '  ')}}"
+####
+- name: This command will display the snmpd status
+  shell: /etc/init.d/snmpd status
+  register: snmpd_status
+  ignore_errors: yes
+- set_fact: 
+    Qa_snmpd_status: "{{ snmpd_status.stdout | replace('\n', '') }}"
+
+- name: This command will display the ase status
+  shell: /etc/init.d/snmpd status
+  register: ase_status
+  ignore_errors: yes
+- set_fact: 
+    Qa_ase_status: "{{ ase_status.stdout | replace('\n', '')}}"
+
+- name: This command will display the sssd status
+  shell: /etc/init.d/sssd status
+  register: sssd_status
+  ignore_errors: yes
+- set_fact: 
+    Qa_sssd_status: "{{ sssd_status.stdout | replace('\n', '')}}"
+
+- name: This command will display the cma status
+  shell: /etc/init.d/cma status
+  register: cma_status
+  ignore_errors: yes
+- set_fact: 
+    Qa_cma_status: "{{ cma_status.stdout | replace('\n', '')}}"
+
+- name: This command will display the rsyslog status
+  shell: /etc/init.d/rsyslog status
+  register: rsyslog_status
+  ignore_errors: yes
+- set_fact: 
+    Qa_rsyslog_status: "{{ rsyslog_status.stdout | replace('\n', '')}}"
+
+- name: This command will display the rscd status
+  shell: ps -aux |grep rscd
+  register: rscd_status
+  ignore_errors: yes
+- set_fact: 
+    Qa_rscd_status: "{{ rscd_status.stdout | replace('\n', '')}}"
+
+- name: This command will display the ntpd status
+  shell: /etc/init.d/ntpd status
+  register: ntpd_status
+  ignore_errors: yes
+- set_fact: 
+    Qa_ntpd_status: "{{ ntpd_status.stdout | replace('\n', '')}}"
+
+- name: This command will display the snmp status
+  shell: rpm -qa |grep snmp
+  register: snmp_status
+  ignore_errors: yes
+- set_fact: 
+    Qa_snmp_status: "{{ snmp_status.stdout | replace('\n', '')}}"
+
+- name: This command will display the ntpd rpm
+  shell: rpm -qa |grep ntpd
+  register: rpm_ntpd_status
+  ignore_errors: yes
+- set_fact: 
+    Qa_rpm_ntpd_status: "{{ rpm_ntpd_status.stdout | replace('\n', '')}}"
+
+- name: This command will display mfetpcli
+  shell: /opt/McAfee/ens/tp/bin/mfetpcli --version
+  register: mfetpcli_status
+  ignore_errors: yes
+- set_fact: 
+    Qa_mfetpcli_status: "{{ mfetpcli_status.stdout | replace('\n', '')}}"
+
+- debug:
+    msg: 
+      - Qa server: "{{Qa_server}}"
+      - Qa os: "{{Qa_os}}"
+      - Qa kernal version: "{{Qa_kernal_version}}"
+      - Qa patched date: "{{Qa_patched_date}}" 
+      - Qa local accounts: "{{Qa_local_accounts}}"
+      - Qa local accounts pass max days: "{{Qa_local_max_days}}"
+      - Qa local groups: "{{Qa_local_groups}}"
+      - Qa snmpd status: "{{Qa_snmpd_status}}"
+      - Qa ase status: "{{Qa_ase_status}}"
+      - Qa sssd status: "{{Qa_sssd_status}}"
+      - Qa cma status: "{{Qa_cma_status}}"
+      - Qa rsyslog status: "{{Qa_rsyslog_status}}"
+      - Qa rscd status: "{{Qa_rscd_status}}"
+      - Qa ntpd status: "{{Qa_ntpd_status}}"
+      - Qa snmp status: "{{Qa_snmp_status}}"
+      - Qa rpm ntpd status: "{{Qa_rpm_ntpd_status}}"
+      - Qa rpm mfetpcli status: "{{Qa_mfetpcli_status}}"
+  
+- name: Creating an empty CSV file if not present
+  file:
+    path: "{{ path }}/QA_checllist_linux_report_{{ansible_hostname}}.csv"
+    state: touch
+    mode: '0777'
+  become: yes
+
+- name: Copy template to location
+  template:
+    src: ../template/QA_checllist_linux_report.csv.j2
+    dest: '{{ path }}/QA_checllist_linux_report_{{ansible_hostname}}.csv'
+    mode: 0777
+  become: yes
